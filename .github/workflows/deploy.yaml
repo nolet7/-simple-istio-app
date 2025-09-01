@@ -42,6 +42,7 @@ jobs:
       run: |
         helm upgrade --install simple-app charts/simple-app \
           -n staging --create-namespace --wait \
+          --kubeconfig $HOME/kubeconfig \
           --set frontend.image=${{ env.FRONTEND_IMAGE }} \
           --set backend.image=${{ env.BACKEND_IMAGE }}
 
