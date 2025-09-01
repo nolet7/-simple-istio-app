@@ -2,12 +2,11 @@ name: CI/CD Deploy Simple Istio App
 
 on:
   push:
-    branches: ['main']
+    branches: ["main"]
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: self-hosted
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,7 +17,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build & Push Frontend
       - name: Build & Push Frontend
         run: |
           IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${GITHUB_SHA}
@@ -26,44 +24,31 @@ jobs:
           docker push $IMAGE
           echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      # Build & Push Backend v1
       - name: Build & Push Backend v1
         run: |
           IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend-v1:${GITHUB_SHA}
           docker build -t $IMAGE ./backend-v1
           docker push $IMAGE
-          echo "BACKENDV1_IMAGE=$IMAGE" >> $GITHUB_ENV
+          echo "BACKEND_V1_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      # Build & Push Backend v2
       - name: Build & Push Backend v2
         run: |
           IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend-v2:${GITHUB_SHA}
           docker build -t $IMAGE ./backend-v2
           docker push $IMAGE
-          echo "BACKENDV2_IMAGE=$IMAGE" >> $GITHUB_ENV
+          echo "BACKEND_V2_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      # Write kubeconfig
-      - name: Write kubeconfig from secret
+      - name: Update Helm values.yaml
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/kubeconfig
-          chmod 600 $HOME/kubeconfig
-          kubectl --kubeconfig=$HOME/kubeconfig get nodes
+          sed -i "s|simple-frontend:.*|simple-frontend:${GITHUB_SHA}|" charts/simple-app/values.yaml
+          sed -i "s|simple-backend-v1:.*|simple-backend-v1:${GITHUB_SHA}|" charts/simple-app/values.yaml
+          sed -i "s|simple-backend-v2:.*|simple-backend-v2:${GITHUB_SHA}|" charts/simple-app/values.yaml
 
-      # Deploy with Helm
-      - name: Deploy with Helm
+      - name: Commit and push updated values.yaml
         run: |
-          helm upgrade --install simple-app charts/simple-app \
-            -n staging --create-namespace --wait \
-            --kubeconfig=$HOME/kubeconfig \
-            --set frontend.image.name=simple-frontend \
-            --set frontend.image.tag=${GITHUB_SHA} \
-            --set backendV1.image.name=simple-backend-v1 \
-            --set backendV1.image.tag=${GITHUB_SHA} \
-            --set backendV2.image.name=simple-backend-v2 \
-            --set backendV2.image.tag=${GITHUB_SHA}
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add charts/simple-app/values.yaml
+          git commit -m "Update images to $GITHUB_SHA"
+          git push
 
-      # Get Frontend URL
-      - name: Get Frontend URL
-        run: |
-          INGRESS_IP=$(kubectl --kubeconfig=$HOME/kubeconfig -n istio-system get svc istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "Frontend available at: http://$INGRESS_IP/"
