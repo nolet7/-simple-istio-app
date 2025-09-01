@@ -18,6 +18,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    # Build & push frontend
     - name: Build & Push Frontend
       run: |
         IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
@@ -25,12 +26,21 @@ jobs:
         docker push $IMAGE
         echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-    - name: Build & Push Backend
+    # Build & push backend v1
+    - name: Build & Push Backend v1
       run: |
-        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
-        docker build -t $IMAGE ./backend
+        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend-v1:${{ github.sha }}
+        docker build -t $IMAGE ./backend-v1
         docker push $IMAGE
-        echo "BACKEND_IMAGE=$IMAGE" >> $GITHUB_ENV
+        echo "BACKEND_V1_IMAGE=$IMAGE" >> $GITHUB_ENV
+
+    # Build & push backend v2
+    - name: Build & Push Backend v2
+      run: |
+        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend-v2:${{ github.sha }}
+        docker build -t $IMAGE ./backend-v2
+        docker push $IMAGE
+        echo "BACKEND_V2_IMAGE=$IMAGE" >> $GITHUB_ENV
 
     - name: Write kubeconfig from secret
       run: |
@@ -45,12 +55,13 @@ jobs:
           --kubeconfig=$HOME/kubeconfig \
           --set frontend.image.name=simple-frontend \
           --set frontend.image.tag=${GITHUB_SHA} \
-          --set backend.image.name=simple-backend \
-          --set backend.image.tag=${GITHUB_SHA}
+          --set backendV1.image.name=simple-backend-v1 \
+          --set backendV1.image.tag=${GITHUB_SHA} \
+          --set backendV2.image.name=simple-backend-v2 \
+          --set backendV2.image.tag=${GITHUB_SHA}
 
     - name: Get Frontend URL
       run: |
-        # Extract NodePort for frontend service
         NODE_PORT=$(kubectl --kubeconfig=$HOME/kubeconfig -n staging get svc frontend -o jsonpath='{.spec.ports[0].nodePort}')
         NODE_IP=$(kubectl --kubeconfig=$HOME/kubeconfig get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
         echo "Frontend available at: http://$NODE_IP:$NODE_PORT"

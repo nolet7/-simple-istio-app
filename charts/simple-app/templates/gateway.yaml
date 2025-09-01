@@ -2,8 +2,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: simple-app-gateway
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Values.istio.gateway.name }}
 spec:
   selector:
     istio: ingressgateway
@@ -13,7 +12,8 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-      {{- range .Values.istio.gateway.hosts }}
-      - {{ . }}
-      {{- end }}
+        {{- range .Values.istio.gateway.hosts }}
+        - {{ . | quote }}
+        {{- end }}
 {{- end }}
+

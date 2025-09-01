@@ -14,10 +14,21 @@ frontend:
     port: 80
     targetPort: 80
 
-backend:
+backendV1:
   replicaCount: 1
   image:
-    name: simple-backend
+    name: simple-backend-v1
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 5000
+    targetPort: 5000
+
+backendV2:
+  replicaCount: 1
+  image:
+    name: simple-backend-v2
     tag: ""
     pullPolicy: ""
   service:
@@ -28,5 +39,37 @@ backend:
 istio:
   enabled: true
   gateway:
+    name: simple-app-gateway
     hosts:
       - "*"
+  virtualService:
+    name: simple-app-vs
+    hosts:
+      - "*"
+    gateway: simple-app-gateway
+    routes:
+      - match:
+          - uri:
+              prefix: /api/v1
+        route:
+          - destination:
+              host: backend-v1
+              port:
+                number: 5000
+      - match:
+          - uri:
+              prefix: /api/v2
+        route:
+          - destination:
+              host: backend-v2
+              port:
+                number: 5000
+      - match:
+          - uri:
+              prefix: /
+        route:
+          - destination:
+              host: frontend
+              port:
+                number: 80
+
