@@ -34,7 +34,7 @@ backendV2:
   service:
     type: ClusterIP
     port: 5001
-    targetPort: 5000
+    targetPort: 5000   # still target 5000 inside container
 
 istio:
   enabled: true
