@@ -2,48 +2,48 @@ name: CI/CD Deploy Simple Istio App
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-deploy:
     runs-on: self-hosted
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Log in to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build & Push Frontend
-      run: |
-        IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
-        docker build -t $IMAGE ./frontend
-        docker push $IMAGE
-        echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
+      - name: Build & Push Frontend
+        run: |
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
+          docker build -t $IMAGE ./frontend
+          docker push $IMAGE
+          echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-    - name: Build & Push Backend
-      run: |
-        IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
-        docker build -t $IMAGE ./backend
-        docker push $IMAGE
-        echo "BACKEND_IMAGE=$IMAGE" >> $GITHUB_ENV
+      - name: Build & Push Backend
+        run: |
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
+          docker build -t $IMAGE ./backend
+          docker push $IMAGE
+          echo "BACKEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-    - name: Write kubeconfig from secret
-      run: |
-        echo "${{ secrets.KUBECONFIG }}" > $HOME/kubeconfig
-        chmod 600 $HOME/kubeconfig
-        kubectl --kubeconfig=$HOME/kubeconfig get nodes
+      - name: Write kubeconfig from secret
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/kubeconfig
+          chmod 600 $HOME/kubeconfig
+          kubectl --kubeconfig=$HOME/kubeconfig get nodes
 
-    - name: Deploy with Helm
-      run: |
-        helm upgrade --install simple-app charts/simple-app \
-          -n staging --create-namespace --wait \
-          --kubeconfig=$HOME/kubeconfig \
-          --set frontend.image.repository=simple-frontend \
-          --set frontend.image.tag=${{ github.sha }} \
-          --set backend.image.repository=simple-backend \
-          --set backend.image.tag=${{ github.sha }}
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install simple-app charts/simple-app \
+            -n staging --create-namespace --wait \
+            --kubeconfig=$HOME/kubeconfig \
+            --set frontend.image.name=simple-frontend \
+            --set frontend.image.tag=${{ github.sha }} \
+            --set backend.image.name=simple-backend \
+            --set backend.image.tag=${{ github.sha }}
