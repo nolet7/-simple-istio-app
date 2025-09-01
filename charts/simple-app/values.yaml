@@ -2,40 +2,36 @@ global:
   imageRegistry: docker.io/noletengine
   imageTag: latest
   imagePullPolicy: IfNotPresent
-
 frontend:
   replicaCount: 1
   image:
     name: simple-frontend
-    tag: ""
+    tag: "02d4d1f3e78761e559c297e8ad47d0ca4f0191b1"
     pullPolicy: ""
   service:
     type: ClusterIP
     port: 80
     targetPort: 80
-
 backendV1:
   replicaCount: 1
   image:
     name: simple-backend-v1
-    tag: ""
+    tag: "02d4d1f3e78761e559c297e8ad47d0ca4f0191b1"
     pullPolicy: ""
   service:
     type: ClusterIP
     port: 5000
     targetPort: 5000
-
 backendV2:
   replicaCount: 1
   image:
     name: simple-backend-v2
-    tag: ""
+    tag: "02d4d1f3e78761e559c297e8ad47d0ca4f0191b1"
     pullPolicy: ""
   service:
     type: ClusterIP
     port: 5001
     targetPort: 5000
-
 istio:
   enabled: true
   gateway:
