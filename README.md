@@ -1,65 +1,136 @@
-# Simple Istio App
 
-This project is a demo microservices app with:
-- **Frontend** (simple-frontend)
-- **Backend v1** (simple-backend-v1)
-- **Backend v2** (simple-backend-v2)
+# Simple Istio App 
 
-It supports:
-- Local development with **Docker Compose**
-- Kubernetes deployment with **Helm**
-- CI/CD with **GitHub Actions**
+A demo microservices app with **Frontend**, **Backend v1**, and **Backend v2**.
+It uses **Docker + Helm + GitHub Actions CI/CD** and deploys to Kubernetes with **Istio Gateway + VirtualService** to control traffic.
 
 ---
 
-## � Local Development
+## 🔹 Project Structure
 
-### Prerequisites
-- Docker & Docker Compose installed
+```
+simple-istio-app/
+├── backend-v1/        # Backend service v1
+├── backend-v2/        # Backend service v2
+├── frontend/          # Frontend service
+├── charts/simple-app/ # Helm chart with Istio configs
+├── docker-compose.yml # Local testing
+└── .github/workflows/deploy.yaml # CI/CD workflow
+```
 
-### Run the stack
+---
+
+## 🔹 Local Development (Docker Compose)
+
+Run the app locally with:
+
 ```bash
 docker compose up --build
-Services
+```
 
-Frontend ��→ http://localhost:8080
+* Frontend → [http://localhost:8080](http://localhost:8080)
+* Backend v1 → [http://localhost:5000](http://localhost:5000)
+* Backend v2 → [http://localhost:5001](http://localhost:5001)
 
-Backend v1 → http://localhost:5000
+---
 
-Backend v2 → http://localhost:5001
+## 🔹 CI/CD Deployment (GitHub Actions)
 
-☸️ Kubernetes Deployment
-Prerequisites
+Every push to `main` branch:
 
-Kubernetes cluster
+1. Builds and pushes Docker images to Docker Hub:
 
-Helm installed
+   * `noletengine/simple-frontend`
+   * `noletengine/simple-backend-v1`
+   * `noletengine/simple-backend-v2`
+2. Deploys via Helm to Kubernetes (`staging` namespace).
+3. Configures Istio Gateway + VirtualService for routing.
 
-Namespace staging
+---
 
-Deploy with Helm
-helm upgrade --install simple-app charts/simple-app -n staging --create-namespace
+##  Istio Traffic Flow 
 
-� CI/CD with GitHub Actions
+When deployed on Kubernetes with Istio:
 
-The GitHub Actions workflow (.github/workflows/deploy.yaml) does the following:
+### 1. **User Access**
 
-Builds and pushes Docker images for:
+* A user opens **http\://<INGRESS-IP>/**
+* The Istio **Gateway** accepts external HTTP traffic and forwards it to the **VirtualService**.
 
-noletengine/simple-frontend
+### 2. **Frontend Routing**
 
-noletengine/simple-backend-v1
+* All `/` requests → routed to the **frontend** service.
+* Frontend serves the static UI and makes API calls to `/api`.
 
-noletengine/simple-backend-v2
+### 3. **Backend Routing**
 
-Deploys with Helm to the staging namespace.
+* Requests to `/api` → Istio VirtualService routes traffic to:
 
-Images are tagged with the Git commit SHA for traceability.
+  * **backend-v1** (50% of requests)
+  * **backend-v2** (50% of requests)
 
-��� Istio Canary Testing
+This split simulates a **canary rollout**, allowing you to gradually test `backend-v2` alongside `backend-v1`.
 
-Istio manifests (VirtualService + DestinationRule) are included to allow traffic splitting:
+---
 
-backend-v1 and backend-v2 can run simultaneously
+## 🔹 Istio Config Summary
 
-Canary rollout possible with weighted traffic (e.g. 90% v1 / 10% v2)
+### Gateway (`gateway.yaml`)
+
+Exposes the app to the outside world:
+
+```yaml
+hosts:
+  - "*"
+```
+
+### VirtualService (`virtualservice.yaml`)
+
+* `/` → **frontend**
+* `/api` → **backend-v1** (50%), **backend-v2** (50%)
+
+```yaml
+http:
+- match:
+  - uri:
+      prefix: /
+  route:
+  - destination:
+      host: frontend
+      port:
+        number: 80
+
+- match:
+  - uri:
+      prefix: /api
+  route:
+  - destination:
+      host: backend-v1
+      port:
+        number: 5000
+    weight: 50
+  - destination:
+      host: backend-v2
+      port:
+        number: 5001
+    weight: 50
+```
+
+---
+
+##  Accessing the App
+
+After deployment, get the URL:
+
+```bash
+kubectl -n staging get svc istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+
+Visit:
+
+* **Frontend:** `http://<INGRESS-IP>/`
+* **Backend (API routed via Istio):** `http://<INGRESS-IP>/api`
+
+
+Would you like me to also add a **diagram (Mermaid)** in the README showing the flow:
+**User → Istio Gateway → VirtualService → Frontend / Backend v1/v2**?
