@@ -1,15 +1,19 @@
+{{- if .Values.istio.enabled }}
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: simple-app-gateway
-  namespace: staging
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
-    istio: ingressgateway   # use your Istio ingress gateway labels
+    istio: ingressgateway
   servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "*"
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+      {{- range .Values.istio.gateway.hosts }}
+      - {{ . }}
+      {{- end }}
+{{- end }}
