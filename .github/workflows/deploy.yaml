@@ -1,0 +1,58 @@
+name: CI/CD Deploy Simple Istio App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build & Push Frontend
+      run: |
+        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
+        docker build -t $IMAGE - <<'EOF'
+        FROM python:3.9-slim
+        RUN echo '<h1>Simple Frontend</h1><p>Go to /api for backend canary test.</p>' > index.html
+        CMD ["python3", "-m", "http.server", "80"]
+        EOF
+        docker push $IMAGE
+        echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
+
+    - name: Build & Push Backend
+      run: |
+        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
+        docker build -t $IMAGE - <<'EOF'
+        FROM python:3.9-slim
+        RUN echo 'Hello from Backend v1' > index.html
+        CMD ["python3", "-m", "http.server", "5000"]
+        EOF
+        docker push $IMAGE
+        echo "BACKEND_IMAGE=$IMAGE" >> $GITHUB_ENV
+
+    - name: Write kubeconfig from secret
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" > kubeconfig
+        chmod 600 kubeconfig
+        kubectl --kubeconfig=kubeconfig get nodes
+
+    - name: Deploy with Helm
+      run: |
+        helm upgrade --install simple-app charts/simple-app \
+          -n staging --create-namespace --wait \
+          --set global.imageRegistry=docker.io/${{ secrets.DOCKERHUB_USERNAME }} \
+          --set frontend.image.repository=simple-frontend \
+          --set frontend.image.tag=${{ github.sha }} \
+          --set backend.image.repository=simple-backend \
+          --set backend.image.tag=${{ github.sha }}
+

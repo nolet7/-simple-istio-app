@@ -1,0 +1,28 @@
+global:
+  imageRegistry: docker.io/noletengine
+  imageTag: latest
+  imagePullPolicy: IfNotPresent
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: simple-frontend
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 30080
+
+backend:
+  replicaCount: 1
+  image:
+    repository: simple-backend
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 5000
+    targetPort: 5000
+
