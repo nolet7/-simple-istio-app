@@ -33,43 +33,11 @@ backendV2:
     pullPolicy: ""
   service:
     type: ClusterIP
-    port: 5000
+    port: 5001
     targetPort: 5000
 
 istio:
   enabled: true
   gateway:
-    name: simple-app-gateway
     hosts:
       - "*"
-  virtualService:
-    name: simple-app-vs
-    hosts:
-      - "*"
-    gateway: simple-app-gateway
-    routes:
-      - match:
-          - uri:
-              prefix: /api/v1
-        route:
-          - destination:
-              host: backend-v1
-              port:
-                number: 5000
-      - match:
-          - uri:
-              prefix: /api/v2
-        route:
-          - destination:
-              host: backend-v2
-              port:
-                number: 5000
-      - match:
-          - uri:
-              prefix: /
-        route:
-          - destination:
-              host: frontend
-              port:
-                number: 80
-
