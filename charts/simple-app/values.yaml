@@ -24,3 +24,9 @@ backend:
     type: ClusterIP
     port: 5000
     targetPort: 5000
+
+istio:
+  enabled: true
+  gateway:
+    hosts:
+      - "*"
