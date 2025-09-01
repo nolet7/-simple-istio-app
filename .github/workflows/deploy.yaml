@@ -12,6 +12,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Ensure Docker is installed
+      run: |
+        if ! command -v docker &> /dev/null; then
+          echo "Installing Docker..."
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo usermod -aG docker $USER
+        else
+          echo "Docker already installed."
+        fi
+        docker --version
+
+    - name: Install Helm
+      run: |
+        if ! command -v helm &> /dev/null; then
+          echo "Installing Helm..."
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        else
+          echo "Helm already installed."
+        fi
+        helm version
+
     - name: Log in to DockerHub
       uses: docker/login-action@v2
       with:
@@ -21,7 +43,7 @@ jobs:
     - name: Build & Push Frontend
       run: |
         IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
-        docker build -t $IMAGE - <<'EOF'
+        docker build -t $IMAGE - <<EOF
         FROM python:3.9-slim
         RUN echo '<h1>Simple Frontend</h1><p>Go to /api for backend canary test.</p>' > index.html
         CMD ["python3", "-m", "http.server", "80"]
@@ -32,7 +54,7 @@ jobs:
     - name: Build & Push Backend
       run: |
         IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
-        docker build -t $IMAGE - <<'EOF'
+        docker build -t $IMAGE - <<EOF
         FROM python:3.9-slim
         RUN echo 'Hello from Backend v1' > index.html
         CMD ["python3", "-m", "http.server", "5000"]
@@ -50,9 +72,6 @@ jobs:
       run: |
         helm upgrade --install simple-app charts/simple-app \
           -n staging --create-namespace --wait \
-          --set global.imageRegistry=docker.io/${{ secrets.DOCKERHUB_USERNAME }} \
-          --set frontend.image.repository=simple-frontend \
-          --set frontend.image.tag=${{ github.sha }} \
-          --set backend.image.repository=simple-backend \
-          --set backend.image.tag=${{ github.sha }}
+          --set frontend.image=${{ env.FRONTEND_IMAGE }} \
+          --set backend.image=${{ env.BACKEND_IMAGE }}
 
