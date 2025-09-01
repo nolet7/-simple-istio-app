@@ -1,3 +1,5 @@
+#version: "3.8"
+
 services:
   frontend:
     build: ./frontend
@@ -9,7 +11,7 @@ services:
       - backend-v2
 
   backend-v1:
-    build: ./backend
+    build: ./backend-v1
     container_name: simple-backend-v1
     ports:
       - "5000:5000"
@@ -17,7 +19,7 @@ services:
       - VERSION=v1
 
   backend-v2:
-    build: ./backend
+    build: ./backend-v2
     container_name: simple-backend-v2
     ports:
       - "5001:5000"
