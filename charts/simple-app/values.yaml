@@ -6,9 +6,9 @@ global:
 frontend:
   replicaCount: 1
   image:
-    repository: simple-frontend
+    name: simple-frontend   # use "name" instead of "repository"
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   service:
     type: NodePort
     port: 80
@@ -18,9 +18,9 @@ frontend:
 backend:
   replicaCount: 1
   image:
-    repository: simple-backend
+    name: simple-backend    # use "name" instead of "repository"
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   service:
     type: ClusterIP
     port: 5000
