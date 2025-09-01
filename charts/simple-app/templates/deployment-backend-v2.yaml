@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:canary"
+        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.name }}:canary"
         ports:
-        - containerPort: 5000
-        command: ["sh", "-c", "echo 'Hello from Backend v2 (canary)' > index.html && python3 -m http.server 5000"]
+        - containerPort: {{ .Values.backend.service.targetPort }}
+        command: ["sh", "-c", "echo 'Hello from Backend v2 (canary)' > index.html && python3 -m http.server {{ .Values.backend.service.targetPort }}"]
