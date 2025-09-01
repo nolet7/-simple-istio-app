@@ -1,41 +1,37 @@
 global:
   imageRegistry: docker.io/noletengine
-  imageTag: "unused"   # placeholder, not used
+  imageTag: "unused" # placeholder, not used
   imagePullPolicy: IfNotPresent
-
 frontend:
   replicaCount: 1
   image:
     name: simple-frontend
-    tag: ""   # workflow injects SHA
+    tag: "148d248a9e908c7dc0c1064422656f53a18c7b04" # workflow injects SHA
     pullPolicy: ""
   service:
     type: ClusterIP
     port: 80
     targetPort: 80
-
 backendV1:
   replicaCount: 1
   image:
     name: simple-backend-v1
-    tag: ""   # workflow injects SHA
+    tag: "148d248a9e908c7dc0c1064422656f53a18c7b04" # workflow injects SHA
     pullPolicy: ""
   service:
     type: ClusterIP
     port: 5000
     targetPort: 5000
-
 backendV2:
   replicaCount: 1
   image:
     name: simple-backend-v2
-    tag: ""   # workflow injects SHA
+    tag: "148d248a9e908c7dc0c1064422656f53a18c7b04" # workflow injects SHA
     pullPolicy: ""
   service:
     type: ClusterIP
     port: 5001
     targetPort: 5000
-
 istio:
   enabled: true
   gateway:
