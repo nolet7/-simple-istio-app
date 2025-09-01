@@ -2,15 +2,33 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: {{ .Values.istio.virtualService.name }}
+  name: simple-app
 spec:
   hosts:
-    {{- range .Values.istio.virtualService.hosts }}
-    - {{ . | quote }}
-    {{- end }}
+  - "*"
   gateways:
-    - {{ .Values.istio.virtualService.gateway }}
+  - simple-app-gateway
   http:
-    {{- toYaml .Values.istio.virtualService.routes | nindent 2 }}
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: frontend
+        port:
+          number: {{ .Values.frontend.service.port }}
+  - match:
+    - uri:
+        prefix: /api
+    route:
+    - destination:
+        host: backend-v1
+        port:
+          number: {{ .Values.backendV1.service.port }}
+      weight: 50
+    - destination:
+        host: backend-v2
+        port:
+          number: {{ .Values.backendV2.service.port }}
+      weight: 50
 {{- end }}
-
