@@ -20,14 +20,14 @@ jobs:
 
     - name: Build & Push Frontend
       run: |
-        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
+        IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
         docker build -t $IMAGE ./frontend
         docker push $IMAGE
         echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
     - name: Build & Push Backend
       run: |
-        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
+        IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
         docker build -t $IMAGE ./backend
         docker push $IMAGE
         echo "BACKEND_IMAGE=$IMAGE" >> $GITHUB_ENV
