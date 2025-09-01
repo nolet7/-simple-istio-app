@@ -8,11 +8,6 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
 
-    env:
-      REGISTRY: docker.io
-      IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
-      KUBECONFIG_FILE: $PWD/kubeconfig
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -25,37 +20,26 @@ jobs:
 
     - name: Build & Push Frontend
       run: |
-        FRONTEND_IMAGE=${REGISTRY}/${IMAGE_NAMESPACE}/simple-frontend:${GITHUB_SHA}
-        docker build -t $FRONTEND_IMAGE - <<EOF
-        FROM python:3.9-slim
-        RUN echo '<h1>Simple Frontend</h1><p>Go to /api for backend canary test.</p>' > index.html
-        CMD ["python3", "-m", "http.server", "80"]
-        EOF
-        docker push $FRONTEND_IMAGE
-        echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
+        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
+        docker build -t $IMAGE ./frontend
+        docker push $IMAGE
+        echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
     - name: Build & Push Backend
       run: |
-        BACKEND_IMAGE=${REGISTRY}/${IMAGE_NAMESPACE}/simple-backend:${GITHUB_SHA}
-        docker build -t $BACKEND_IMAGE - <<EOF
-        FROM python:3.9-slim
-        RUN echo 'Hello from Backend v1' > index.html
-        CMD ["python3", "-m", "http.server", "5000"]
-        EOF
-        docker push $BACKEND_IMAGE
-        echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
+        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
+        docker build -t $IMAGE ./backend
+        docker push $IMAGE
+        echo "BACKEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
     - name: Write kubeconfig from secret
       run: |
-        echo "${{ secrets.KUBECONFIG }}" > kubeconfig
-        chmod 600 kubeconfig
-        export KUBECONFIG=$KUBECONFIG_FILE
-        kubectl --kubeconfig=$KUBECONFIG_FILE cluster-info
-        kubectl --kubeconfig=$KUBECONFIG_FILE get nodes
+        echo "${{ secrets.KUBECONFIG }}" > $HOME/kubeconfig
+        chmod 600 $HOME/kubeconfig
+        kubectl --kubeconfig=$HOME/kubeconfig get nodes
 
     - name: Deploy with Helm
       run: |
-        export KUBECONFIG=$KUBECONFIG_FILE
         helm upgrade --install simple-app charts/simple-app \
           -n staging --create-namespace --wait \
           --set frontend.image=${{ env.FRONTEND_IMAGE }} \

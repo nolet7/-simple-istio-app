@@ -1,23 +1,26 @@
-version: "3.8"
-
 services:
   frontend:
     build: ./frontend
+    container_name: simple-frontend
     ports:
-      - "8080:80"
+      - "8080:80"   # host:container
     depends_on:
       - backend-v1
+      - backend-v2
 
   backend-v1:
     build: ./backend
+    container_name: simple-backend-v1
+    ports:
+      - "5000:5000"
     environment:
       - VERSION=v1
-    ports:
-      - "5001:5000"
 
   backend-v2:
     build: ./backend
+    container_name: simple-backend-v2
+    ports:
+      - "5001:5000"
     environment:
       - VERSION=v2
-    ports:
-      - "5002:5000"
+
