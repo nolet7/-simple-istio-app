@@ -18,7 +18,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    # Build & push frontend
+    # Build & Push Frontend
     - name: Build & Push Frontend
       run: |
         IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
@@ -26,7 +26,7 @@ jobs:
         docker push $IMAGE
         echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-    # Build & push backend v1
+    # Build & Push Backend v1
     - name: Build & Push Backend v1
       run: |
         IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend-v1:${{ github.sha }}
@@ -34,7 +34,7 @@ jobs:
         docker push $IMAGE
         echo "BACKEND_V1_IMAGE=$IMAGE" >> $GITHUB_ENV
 
-    # Build & push backend v2
+    # Build & Push Backend v2
     - name: Build & Push Backend v2
       run: |
         IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend-v2:${{ github.sha }}
@@ -65,4 +65,3 @@ jobs:
         NODE_PORT=$(kubectl --kubeconfig=$HOME/kubeconfig -n staging get svc frontend -o jsonpath='{.spec.ports[0].nodePort}')
         NODE_IP=$(kubectl --kubeconfig=$HOME/kubeconfig get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
         echo "Frontend available at: http://$NODE_IP:$NODE_PORT"
-
