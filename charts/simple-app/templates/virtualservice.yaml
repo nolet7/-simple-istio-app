@@ -5,30 +5,30 @@ metadata:
   name: simple-app
 spec:
   hosts:
-  - "*"
+    - "*"
   gateways:
-  - simple-app-gateway
+    - simple-app-gateway
   http:
-  - match:
-    - uri:
-        prefix: /
-    route:
-    - destination:
-        host: frontend
-        port:
-          number: {{ .Values.frontend.service.port }}
-  - match:
-    - uri:
-        prefix: /api
-    route:
-    - destination:
-        host: backend-v1
-        port:
-          number: {{ .Values.backendV1.service.port }}
-      weight: 50
-    - destination:
-        host: backend-v2
-        port:
-          number: {{ .Values.backendV2.service.port }}
-      weight: 50
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: frontend
+            port:
+              number: {{ .Values.frontend.service.port }}
+    - match:
+        - uri:
+            prefix: /api
+      route:
+        - destination:
+            host: backend-v1
+            port:
+              number: {{ .Values.backendV1.service.port }}
+          weight: 50
+        - destination:
+            host: backend-v2
+            port:
+              number: {{ .Values.backendV2.service.port }}
+          weight: 50
 {{- end }}
