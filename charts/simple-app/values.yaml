@@ -1,14 +1,9 @@
-global:
-  imageRegistry: docker.io/noletengine
-  imageTag: latest
-  imagePullPolicy: IfNotPresent
-
 frontend:
   replicaCount: 1
   image:
-    name: simple-frontend
-    tag: ""
-    pullPolicy: ""
+    repository: docker.io/noletengine/simple-frontend
+    tag: "" # Workflow will inject ${GITHUB_SHA}
+    pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 80
@@ -17,9 +12,9 @@ frontend:
 backendV1:
   replicaCount: 1
   image:
-    name: simple-backend-v1
-    tag: ""
-    pullPolicy: ""
+    repository: docker.io/noletengine/simple-backend-v1
+    tag: "" # Workflow will inject ${GITHUB_SHA}
+    pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 5000
@@ -28,16 +23,17 @@ backendV1:
 backendV2:
   replicaCount: 1
   image:
-    name: simple-backend-v2
-    tag: ""
-    pullPolicy: ""
+    repository: docker.io/noletengine/simple-backend-v2
+    tag: "" # Workflow will inject ${GITHUB_SHA}
+    pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 5001
-    targetPort: 5000   # still target 5000 inside container
+    targetPort: 5000 # backend v2 still listens inside container on 5000
 
 istio:
   enabled: true
   gateway:
     hosts:
       - "*"
+
