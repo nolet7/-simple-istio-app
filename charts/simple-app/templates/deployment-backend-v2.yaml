@@ -6,7 +6,7 @@ metadata:
     app: backend
     version: v2
 spec:
-  replicas: 1
+  replicas: {{ .Values.backendV2.replicaCount }}
   selector:
     matchLabels:
       app: backend
@@ -19,8 +19,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:canary"
-        imagePullPolicy: {{ .Values.backend.image.pullPolicy | default .Values.global.imagePullPolicy }}
+        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backendV2.image.name }}:{{ .Values.backendV2.image.tag | default .Values.global.imageTag }}"
+        imagePullPolicy: {{ .Values.backendV2.image.pullPolicy | default .Values.global.imagePullPolicy }}
         ports:
-        - containerPort: {{ .Values.backend.service.targetPort }}
-        command: ["sh", "-c", "echo 'Hello from Backend v2 (canary)' > index.html && python3 -m http.server {{ .Values.backend.service.targetPort }}"]
+        - containerPort: {{ .Values.backendV2.service.targetPort }}
