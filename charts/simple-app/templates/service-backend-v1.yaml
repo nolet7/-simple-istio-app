@@ -6,10 +6,9 @@ metadata:
     app: backend
     version: v1
 spec:
-  type: {{ .Values.backendV1.service.type }}
-  ports:
-    - port: {{ .Values.backendV1.service.port }}
-      targetPort: {{ .Values.backendV1.service.targetPort }}
   selector:
     app: backend
     version: v1
+  ports:
+    - port: {{ .Values.backendV1.service.port }}
+      targetPort: {{ .Values.backendV1.service.targetPort }}
