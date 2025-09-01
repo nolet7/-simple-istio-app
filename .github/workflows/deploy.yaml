@@ -8,31 +8,14 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
 
+    env:
+      REGISTRY: docker.io
+      IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+      KUBECONFIG_FILE: $PWD/kubeconfig
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Ensure Docker is installed
-      run: |
-        if ! command -v docker &> /dev/null; then
-          echo "Installing Docker..."
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo usermod -aG docker $USER
-        else
-          echo "Docker already installed."
-        fi
-        docker --version
-
-    - name: Install Helm
-      run: |
-        if ! command -v helm &> /dev/null; then
-          echo "Installing Helm..."
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-        else
-          echo "Helm already installed."
-        fi
-        helm version
 
     - name: Log in to DockerHub
       uses: docker/login-action@v2
@@ -42,34 +25,36 @@ jobs:
 
     - name: Build & Push Frontend
       run: |
-        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-frontend:${{ github.sha }}
-        docker build -t $IMAGE - <<EOF
+        FRONTEND_IMAGE=${REGISTRY}/${IMAGE_NAMESPACE}/simple-frontend:${GITHUB_SHA}
+        docker build -t $FRONTEND_IMAGE - <<EOF
         FROM python:3.9-slim
         RUN echo '<h1>Simple Frontend</h1><p>Go to /api for backend canary test.</p>' > index.html
         CMD ["python3", "-m", "http.server", "80"]
         EOF
-        docker push $IMAGE
-        echo "FRONTEND_IMAGE=$IMAGE" >> $GITHUB_ENV
+        docker push $FRONTEND_IMAGE
+        echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
 
     - name: Build & Push Backend
       run: |
-        IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/simple-backend:${{ github.sha }}
-        docker build -t $IMAGE - <<EOF
+        BACKEND_IMAGE=${REGISTRY}/${IMAGE_NAMESPACE}/simple-backend:${GITHUB_SHA}
+        docker build -t $BACKEND_IMAGE - <<EOF
         FROM python:3.9-slim
         RUN echo 'Hello from Backend v1' > index.html
         CMD ["python3", "-m", "http.server", "5000"]
         EOF
-        docker push $IMAGE
-        echo "BACKEND_IMAGE=$IMAGE" >> $GITHUB_ENV
+        docker push $BACKEND_IMAGE
+        echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
 
     - name: Write kubeconfig from secret
       run: |
         echo "${{ secrets.KUBECONFIG }}" > kubeconfig
         chmod 600 kubeconfig
-        kubectl --kubeconfig=kubeconfig get nodes
+        export KUBECONFIG=$KUBECONFIG_FILE
+        kubectl get nodes
 
     - name: Deploy with Helm
       run: |
+        export KUBECONFIG=$KUBECONFIG_FILE
         helm upgrade --install simple-app charts/simple-app \
           -n staging --create-namespace --wait \
           --set frontend.image=${{ env.FRONTEND_IMAGE }} \
