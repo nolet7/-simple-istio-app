@@ -6,7 +6,7 @@ global:
 frontend:
   replicaCount: 1
   image:
-    name: simple-frontend   # use "name" instead of "repository"
+    name: simple-frontend   # use "name"
     tag: ""
     pullPolicy: ""
   service:
@@ -18,7 +18,7 @@ frontend:
 backend:
   replicaCount: 1
   image:
-    name: simple-backend    # use "name" instead of "repository"
+    name: simple-backend    # use "name"
     tag: ""
     pullPolicy: ""
   service:
