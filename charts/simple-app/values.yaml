@@ -8,7 +8,7 @@ frontend:
   image:
     repository: simple-frontend
     tag: ""
-    pullPolicy: ""
+    pullPolicy: IfNotPresent
   service:
     type: NodePort
     port: 80
@@ -20,9 +20,8 @@ backend:
   image:
     repository: simple-backend
     tag: ""
-    pullPolicy: ""
+    pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 5000
     targetPort: 5000
-
