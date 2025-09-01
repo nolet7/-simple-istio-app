@@ -6,22 +6,27 @@ global:
 frontend:
   replicaCount: 1
   image:
-    name: simple-frontend   # use "name" instead of "repository"
+    name: simple-frontend
     tag: ""
     pullPolicy: ""
   service:
-    type: NodePort
+    type: ClusterIP
     port: 80
     targetPort: 80
-    nodePort: 30080
 
 backend:
   replicaCount: 1
   image:
-    name: simple-backend    # use "name" instead of "repository"
+    name: simple-backend
     tag: ""
     pullPolicy: ""
   service:
     type: ClusterIP
     port: 5000
     targetPort: 5000
+
+istio:
+  enabled: true
+  gateway:
+    hosts:
+      - "*"

@@ -19,7 +19,8 @@ spec:
     spec:
       containers:
       - name: backend
-        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.name }}:canary"
+        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:canary"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy | default .Values.global.imagePullPolicy }}
         ports:
         - containerPort: {{ .Values.backend.service.targetPort }}
         command: ["sh", "-c", "echo 'Hello from Backend v2 (canary)' > index.html && python3 -m http.server {{ .Values.backend.service.targetPort }}"]

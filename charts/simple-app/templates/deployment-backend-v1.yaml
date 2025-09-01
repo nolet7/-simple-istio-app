@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.name }}:{{ .Values.backend.image.tag | default .Values.global.imageTag }}"
+        image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Values.global.imageTag }}"
         imagePullPolicy: {{ .Values.backend.image.pullPolicy | default .Values.global.imagePullPolicy }}
         ports:
         - containerPort: {{ .Values.backend.service.targetPort }}
